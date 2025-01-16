@@ -21,8 +21,10 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.simplified.wsstatussaver.R
 
-class SwitchWithContainer @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
-    FrameLayout(context, attrs, defStyleAttr), CompoundButton.OnCheckedChangeListener {
+class SwitchWithContainer
+@JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+    FrameLayout(context, attrs, defStyleAttr),
+    CompoundButton.OnCheckedChangeListener {
 
     private var onCheckedChangedListener: CompoundButton.OnCheckedChangeListener? = null
     private var cardView: MaterialCardView? = null
