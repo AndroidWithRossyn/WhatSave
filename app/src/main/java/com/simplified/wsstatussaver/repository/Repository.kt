@@ -26,6 +26,7 @@ import com.simplified.wsstatussaver.model.StatusType
 interface Repository {
     fun statusIsSaved(status: Status): LiveData<Boolean>
     suspend fun statuses(type: StatusType): StatusQueryResult
+    suspend fun savedStatuses(): StatusQueryResult
     suspend fun savedStatuses(type: StatusType): StatusQueryResult
     suspend fun shareStatus(status: Status): ShareData
     suspend fun shareStatuses(statuses: List<Status>): ShareData
@@ -33,6 +34,8 @@ interface Repository {
     suspend fun saveStatuses(statuses: List<Status>): Map<Status, Uri>
     suspend fun deleteStatus(status: Status): Boolean
     suspend fun deleteStatuses(statuses: List<Status>): Int
+    suspend fun removeStatus(status: Status)
+    suspend fun removeStatuses(statuses: List<Status>)
     suspend fun allCountries(): List<Country>
     suspend fun defaultCountry(): Country
     fun defaultCountry(country: Country)
@@ -55,6 +58,8 @@ class RepositoryImpl(
 
     override suspend fun statuses(type: StatusType): StatusQueryResult = statusesRepository.statuses(type)
 
+    override suspend fun savedStatuses(): StatusQueryResult = statusesRepository.savedStatuses()
+
     override suspend fun savedStatuses(type: StatusType): StatusQueryResult = statusesRepository.savedStatuses(type)
 
     override suspend fun shareStatus(status: Status): ShareData = statusesRepository.share(status)
@@ -69,6 +74,10 @@ class RepositoryImpl(
     override suspend fun deleteStatus(status: Status): Boolean = statusesRepository.delete(status)
 
     override suspend fun deleteStatuses(statuses: List<Status>): Int = statusesRepository.delete(statuses)
+
+    override suspend fun removeStatus(status: Status) = statusesRepository.removeFromDatabase(status)
+
+    override suspend fun removeStatuses(statuses: List<Status>) = statusesRepository.removeFromDatabase(statuses)
 
     override suspend fun allCountries(): List<Country> = countryRepository.allCountries()
 

@@ -5,6 +5,7 @@ val isNormalBuild: Boolean by rootProject.extra
 plugins {
     alias(libs.plugins.agp)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
     id("kotlin-parcelize")
     alias(libs.plugins.google.ksp)
     alias(libs.plugins.androidx.safeargs)
@@ -22,11 +23,11 @@ android {
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
 
         applicationId = namespace
-        versionCode = 116
-        versionName = "1.4.2"
+        versionCode = 118
+        versionName = "2.0.0"
     }
 
     val signingProperties = getProperties("keystore.properties")
@@ -153,10 +154,7 @@ dependencies {
     implementation(libs.coil.video)
 
     implementation(libs.photoview)
-    implementation(libs.insetter)
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp3.logging)
+    implementation(libs.bundles.ktor)
     implementation(libs.gson)
     implementation(libs.versioncompare)
     implementation(libs.libphonenumber)

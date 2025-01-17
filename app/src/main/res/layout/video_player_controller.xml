@@ -12,11 +12,14 @@
   ~ See the GNU General Public License for more details.
   -->
 
-<com.simplified.wsstatussaver.views.InsetsConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/controllerView"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:orientation="vertical">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -24,8 +27,7 @@
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
         android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/playback_action_button">
+        android:paddingEnd="16dp">
 
         <ImageView
             android:id="@+id/exo_play_pause"
@@ -41,13 +43,13 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <ImageView
-            android:id="@+id/exo_settings"
+            android:id="@+id/exo_speed_btn"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:importantForAccessibility="no"
             android:scaleType="center"
             android:background="?roundSelector"
-            app:srcCompat="@drawable/ic_tune_24dp"
+            android:contentDescription="@string/playback_speed"
+            app:srcCompat="@drawable/ic_speed_1x_24dp"
             app:tint="@android:color/white"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -85,7 +87,7 @@
             android:textColor="@android:color/white"
             app:layout_constraintTop_toTopOf="@+id/exo_progress"
             app:layout_constraintBottom_toBottomOf="@+id/exo_progress"
-            app:layout_constraintEnd_toStartOf="@+id/exo_settings"
+            app:layout_constraintEnd_toStartOf="@+id/exo_speed_btn"
             tools:text="0:45" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -94,7 +96,6 @@
         android:id="@+id/playback_action_button"
         layout="@layout/playback_action_button"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        android:layout_height="wrap_content" />
 
-</com.simplified.wsstatussaver.views.InsetsConstraintLayout>
+</LinearLayout>

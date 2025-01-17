@@ -17,6 +17,7 @@ import android.content.Context
 import com.simplified.wsstatussaver.R
 import com.simplified.wsstatussaver.model.Status
 import com.simplified.wsstatussaver.model.StatusType
+import java.io.File
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -24,6 +25,12 @@ import java.util.Locale
 
 val fileDateFormat: DateFormat by lazy {
     SimpleDateFormat("MMM_d_yyyy_HH.mm.ss", Locale.ENGLISH)
+}
+
+fun Status.getFormattedDate(context: Context): String {
+    val date = Date(dateModified)
+    val resLocale = context.resources.configuration.locales[0]
+    return DateFormat.getDateInstance(DateFormat.MEDIUM, resLocale).format(date)
 }
 
 /**
@@ -45,3 +52,5 @@ fun Status.getState(context: Context): String =
     if (isSaved) context.getString(R.string.status_saved) else context.getString(R.string.status_unsaved)
 
 fun StatusType.acceptFileName(fileName: String): Boolean = !fileName.startsWith(".") && fileName.endsWith(this.format)
+
+fun File.getStatusType() = StatusType.entries.firstOrNull { it.acceptFileName(name) }

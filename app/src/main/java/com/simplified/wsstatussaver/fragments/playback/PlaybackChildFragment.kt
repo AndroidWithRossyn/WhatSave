@@ -22,6 +22,7 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.simplified.wsstatussaver.R
@@ -49,7 +50,6 @@ abstract class PlaybackChildFragment(layoutRes: Int) : Fragment(layoutRes), View
     protected abstract val deleteButton: MaterialButton
 
     protected var status: Status by Delegates.notNull()
-    protected var isSaved: Boolean = false
 
     private lateinit var deletionRequestLauncher: ActivityResultLauncher<IntentSenderRequest>
     private val progressDialog by lazy { requireContext().createProgressDialog() }
@@ -64,8 +64,9 @@ abstract class PlaybackChildFragment(layoutRes: Int) : Fragment(layoutRes), View
         deletionRequestLauncher =
             registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
                 if (it.resultCode == Activity.RESULT_OK) {
-                    viewModel.reloadAll()
+                    viewModel.removeStatus(status)
                     showToast(R.string.deletion_success)
+                    findNavController().popBackStack()
                 }
             }
     }
@@ -73,8 +74,18 @@ abstract class PlaybackChildFragment(layoutRes: Int) : Fragment(layoutRes), View
     override fun onStart() {
         super.onStart()
         viewModel.statusIsSaved(status).observe(viewLifecycleOwner) { isSaved ->
-            this.isSaved = (status is SavedStatus) || isSaved
-            if (this.isSaved) {
+            this.isSaved = isSaved || (status is SavedStatus)
+        }
+        saveButton.setOnClickListener(this)
+        shareButton.setOnClickListener(this)
+        deleteButton.setOnClickListener(this)
+        deleteButton.isEnabled = (status is SavedStatus)
+    }
+
+    private var isSaved: Boolean = false
+        set(value) {
+            field = value
+            if (value) {
                 saveButton.setText(R.string.saved_label)
                 saveButton.setIconResource(R.drawable.ic_round_check_24dp)
             } else {
@@ -82,11 +93,6 @@ abstract class PlaybackChildFragment(layoutRes: Int) : Fragment(layoutRes), View
                 saveButton.setIconResource(R.drawable.ic_save_alt_24dp)
             }
         }
-        saveButton.setOnClickListener(this)
-        shareButton.setOnClickListener(this)
-        deleteButton.setOnClickListener(this)
-        deleteButton.isEnabled = (status is SavedStatus)
-    }
 
     override fun onClick(v: View) {
         when (v) {
@@ -95,6 +101,7 @@ abstract class PlaybackChildFragment(layoutRes: Int) : Fragment(layoutRes), View
                     viewModel.saveStatus(status).observe(viewLifecycleOwner) { result ->
                         if (result.isSuccess) {
                             showToast(R.string.saved_successfully)
+                            viewModel.reloadAll()
                         } else if (!result.isSaving) {
                             showToast(R.string.failed_to_save)
                         }
@@ -131,6 +138,7 @@ abstract class PlaybackChildFragment(layoutRes: Int) : Fragment(layoutRes), View
                                 if (result.isSuccess) {
                                     showToast(R.string.deletion_success)
                                     viewModel.reloadAll()
+                                    findNavController().popBackStack()
                                 } else {
                                     showToast(R.string.deletion_failed)
                                 }

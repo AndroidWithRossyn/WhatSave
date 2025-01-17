@@ -46,7 +46,10 @@ import com.simplified.wsstatussaver.storage.StorageDevice
 import com.simplified.wsstatussaver.update.DEFAULT_REPO
 import com.simplified.wsstatussaver.update.DEFAULT_USER
 import com.simplified.wsstatussaver.update.GitHubRelease
-import com.simplified.wsstatussaver.update.UpdateService
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
@@ -54,13 +57,13 @@ import java.util.EnumMap
 
 class WhatSaveViewModel(
     private val repository: Repository,
-    private val updateService: UpdateService,
+    private val httpClient: HttpClient,
     private val storage: Storage
 ) : ViewModel() {
 
     private val liveDataMap = newStatusesLiveDataMap()
-    private val savedLiveDataMap = newStatusesLiveDataMap()
 
+    private val savedStatuses = MutableLiveData(StatusQueryResult.Idle)
     private val installedClients = MutableLiveData<List<WaClient>>()
     private val storageDevices = MutableLiveData<List<StorageDevice>>()
     private val countries = MutableLiveData<List<Country>>()
@@ -71,7 +74,6 @@ class WhatSaveViewModel(
     override fun onCleared() {
         super.onCleared()
         liveDataMap.clear()
-        savedLiveDataMap.clear()
     }
 
     fun unlockMessageView() {
@@ -92,12 +94,10 @@ class WhatSaveViewModel(
 
     fun getSelectedCountry() = selectedCountry.value
 
+    fun getSavedStatuses(): LiveData<StatusQueryResult> = savedStatuses
+
     fun getStatuses(type: StatusType): LiveData<StatusQueryResult> {
         return liveDataMap.getOrCreateLiveData(type)
-    }
-
-    fun getSavedStatuses(type: StatusType): LiveData<StatusQueryResult> {
-        return savedLiveDataMap.getOrCreateLiveData(type)
     }
 
     fun loadClients() = viewModelScope.launch(IO) {
@@ -131,19 +131,16 @@ class WhatSaveViewModel(
         }
     }
 
-    fun loadSavedStatuses(type: StatusType) = viewModelScope.launch(IO) {
-        val liveData = savedLiveDataMap[type]
-        if (liveData != null) {
-            liveData.postValue(liveData.value?.copy(code = ResultCode.Loading) ?: StatusQueryResult(ResultCode.Loading))
-            liveData.postValue(repository.savedStatuses(type))
-        }
+    fun loadSavedStatuses() = viewModelScope.launch(IO) {
+        savedStatuses.postValue(savedStatuses.value?.copy(code = ResultCode.Loading) ?: StatusQueryResult(ResultCode.Loading))
+        savedStatuses.postValue(repository.savedStatuses())
     }
 
     fun reloadAll() {
         StatusType.entries.forEach {
             loadStatuses(it)
-            loadSavedStatuses(it)
         }
+        loadSavedStatuses()
     }
 
     fun statusIsSaved(status: Status): LiveData<Boolean> = repository.statusIsSaved(status)
@@ -186,6 +183,16 @@ class WhatSaveViewModel(
         emit(DeletionResult(statuses = statuses, deleted = result))
     }
 
+    fun removeStatus(status: Status) = viewModelScope.launch(IO) {
+        repository.removeStatus(status)
+        reloadAll()
+    }
+
+    fun removeStatuses(statuses: List<Status>) = viewModelScope.launch(IO) {
+        repository.removeStatuses(statuses)
+        reloadAll()
+    }
+
     fun messageSenders(): LiveData<List<Conversation>> =
         repository.listConversations()
 
@@ -220,7 +227,10 @@ class WhatSaveViewModel(
     }
 
     fun getLatestUpdate(): LiveData<GitHubRelease> = liveData(IO + SilentHandler) {
-        emit(updateService.latestRelease(DEFAULT_USER, DEFAULT_REPO))
+        val result = httpClient.get("https://api.github.com/repos/$DEFAULT_USER/$DEFAULT_REPO/releases/latest")
+        if (result.status.isSuccess()) {
+            emit(result.body())
+        }
     }
 
     fun downloadUpdate(context: Context, release: GitHubRelease) = viewModelScope.launch(IO + SilentHandler) {
